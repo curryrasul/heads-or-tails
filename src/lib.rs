@@ -229,5 +229,33 @@ impl Contract {
         }
     }
 
-    pub fn get_prize() {}
+    pub fn get_prize(&mut self, game_id: GameId) {
+        assert!(
+            self.games.get(&game_id).is_some(),
+            "No game with such GameId"
+        );
+
+        let mut game = self.games.get(&game_id).unwrap();
+
+        if let GameState::Revealed = game.game_state {
+            assert_eq!(game.player1.clone(), env::predecessor_account_id());
+
+            let reveal_time = game.reveal_time.clone().unwrap();
+            assert!(
+                env::block_timestamp() - reveal_time > ONE_MINUTE,
+                "Can't demand prize yet"
+            );
+
+            log!("Player2 is late. Player1 is winner");
+
+            game.winner = Some(env::predecessor_account_id());
+            game.game_state = GameState::Ended;
+
+            Promise::new(env::predecessor_account_id()).transfer(2 * game.deposit);
+
+            self.games.insert(&game_id, &game);
+        } else {
+            panic!("Game is not active");
+        }
+    }
 }

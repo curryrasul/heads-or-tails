@@ -117,4 +117,95 @@ impl Contract {
             panic!("Game is not active");
         }
     }
+
+    pub fn first_reveal(&mut self, game_id: GameId, reveal: Vec<u8>) {
+        assert!(
+            self.games.get(&game_id).is_some(),
+            "No game with such GameId"
+        );
+
+        let mut game = self.games.get(&game_id).unwrap();
+
+        if let GameState::Initialized = game.game_state {
+            assert_eq!(
+                game.player1.clone(),
+                env::predecessor_account_id(),
+                "Player1 is not {}",
+                env::predecessor_account_id()
+            );
+
+            game.player1_reveal = Some(reveal);
+            if Game::commit_reveal(
+                &(game.player1_commit),
+                &(game.player1_reveal.clone().unwrap()),
+            ) {
+                game.game_state = GameState::Revealed;
+                game.reveal_time = Some(env::block_timestamp());
+            } else {
+                log!("Player1 is not honest");
+
+                game.game_state = GameState::Ended;
+
+                game.winner = Some(game.player2.clone().unwrap());
+                Promise::new(game.player2.clone().unwrap()).transfer(game.deposit * 2);
+            }
+
+            self.games.insert(&game_id, &game);
+        } else {
+            panic!("Game is not active");
+        }
+    }
+
+    pub fn second_reveal(&mut self, game_id: GameId, reveal: Vec<u8>) {
+        assert!(
+            self.games.get(&game_id).is_some(),
+            "No game with such GameId"
+        );
+
+        let mut game = self.games.get(&game_id).unwrap();
+
+        if let GameState::Revealed = game.game_state {
+            assert_eq!(
+                game.player2.clone().unwrap(),
+                env::predecessor_account_id(),
+                "Player2 is not {}",
+                env::predecessor_account_id()
+            );
+
+            game.player2_reveal = Some(reveal);
+
+            if Game::commit_reveal(
+                &(game.player2_commit.clone().unwrap()),
+                &(game.player2_reveal.clone().unwrap()),
+            ) {
+                let player1_reveal = game.player1_reveal.clone().unwrap();
+                let player2_reveal = game.player1_reveal.clone().unwrap();
+
+                let first_guess = u128::from_be_bytes(player1_reveal.try_into().unwrap());
+                let second_guess = u128::from_be_bytes(player2_reveal.try_into().unwrap());
+
+                if game.player1_guess == ((first_guess + second_guess) % 2 == 0) {
+                    log!("Player1 is Winner");
+                    game.winner = Some(game.player1.clone());
+
+                    Promise::new(game.player1.clone()).transfer(game.deposit * 2);
+                } else {
+                    log!("Player2 is Winner");
+                    game.winner = Some(game.player2.clone().unwrap());
+
+                    Promise::new(game.player2.clone().unwrap()).transfer(game.deposit * 2);
+                }
+            } else {
+                log!("Player2 is not honest");
+
+                game.winner = Some(game.player1.clone());
+                Promise::new(game.player1.clone()).transfer(game.deposit * 2);
+            }
+
+            game.game_state = GameState::Ended;
+            self.games.insert(&game_id, &game);
+        } else {
+            panic!("Game is not active");
+        }
+    }
 }

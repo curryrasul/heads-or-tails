@@ -12,8 +12,8 @@ type GameId = u64;
 
 const ONE_NEAR: Balance = 1_000_000_000_000_000_000_000_000;
 
-// const ONE_SECOND: u64 = 1_000_000_000;
-// const ONE_MINUTE: u64 = 60 * ONE_SECOND;
+const ONE_SECOND: u64 = 1_000_000_000;
+const ONE_MINUTE: u64 = 60 * ONE_SECOND;
 
 #[near_bindgen]
 #[derive(BorshDeserialize, BorshSerialize, PanicOnDefault)]
@@ -38,6 +38,11 @@ impl Contract {
 
     #[payable]
     pub fn create_game(&mut self, guess: bool, commit: Vec<u8>) -> GameId {
+        assert!(
+            commit.len() == 32,
+            "Invalid commit format. Must be byte-vector with size 32"
+        );
+
         let amount = env::attached_deposit();
 
         assert!(amount >= ONE_NEAR, "Deposit have to be >= than 1 NEAR");
@@ -74,6 +79,11 @@ impl Contract {
 
     #[payable]
     pub fn join_game(&mut self, game_id: GameId, commit: Vec<u8>) {
+        assert!(
+            commit.len() == 32,
+            "Invalid commit format. Must be byte-vector with size 32"
+        );
+
         let amount = env::attached_deposit();
 
         assert!(
@@ -120,6 +130,11 @@ impl Contract {
 
     pub fn first_reveal(&mut self, game_id: GameId, reveal: Vec<u8>) {
         assert!(
+            reveal.len() == 16,
+            "Invalid reveal format. Must be byte-vector with size 16"
+        );
+
+        assert!(
             self.games.get(&game_id).is_some(),
             "No game with such GameId"
         );
@@ -157,6 +172,11 @@ impl Contract {
     }
 
     pub fn second_reveal(&mut self, game_id: GameId, reveal: Vec<u8>) {
+        assert!(
+            reveal.len() == 16,
+            "Invalid reveal format. Must be byte-vector with size 16"
+        );
+
         assert!(
             self.games.get(&game_id).is_some(),
             "No game with such GameId"
@@ -208,4 +228,6 @@ impl Contract {
             panic!("Game is not active");
         }
     }
+
+    pub fn get_prize() {}
 }

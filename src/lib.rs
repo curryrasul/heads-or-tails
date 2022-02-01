@@ -1,7 +1,5 @@
 use near_sdk::borsh::{self, BorshDeserialize, BorshSerialize};
-use near_sdk::collections::UnorderedMap;
-use near_sdk::{near_bindgen, PanicOnDefault, log, env};
-use primitive_types::U256;
+use near_sdk::{collections::UnorderedMap, env, log, near_bindgen, PanicOnDefault};
 
 near_sdk::setup_alloc!();
 

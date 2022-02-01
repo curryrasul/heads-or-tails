@@ -258,4 +258,28 @@ impl Contract {
             panic!("Game is not active");
         }
     }
+
+    pub fn get_game_state(&self, game_id: GameId) -> Game {
+        self.games.get(&game_id).expect("No game with such GameId")
+    }
+
+    #[private]
+    pub fn state_cleaner(&mut self) {
+        let ended_games: Vec<_> = self
+            .games
+            .iter()
+            .filter(|(_, v)| {
+                if let GameState::Ended = v.game_state {
+                    true
+                } else {
+                    false
+                }
+            })
+            .map(|(k, _)| k)
+            .collect();
+
+        for i in ended_games {
+            self.games.remove(&i);
+        }
+    }
 }

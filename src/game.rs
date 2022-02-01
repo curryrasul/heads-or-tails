@@ -35,7 +35,26 @@ pub struct Game {
 }
 
 impl Game {
-    pub fn commit_reveal(commit: &[u8], reveal: &Vec<u8>) -> bool {
-        sha256(commit) == *reveal
+    pub fn commit_reveal(commit: &[u8], reveal: &[u8]) -> bool {
+        sha256(reveal) == *commit
+    }
+}
+
+#[cfg(all(test, not(target_arch = "wasm32")))]
+mod tests {
+    use super::*;
+    use near_sdk::test_utils::VMContextBuilder;
+    use near_sdk::{testing_env, MockedBlockchain};
+
+    #[test]
+    fn commit_reveal_test() {
+        let context = VMContextBuilder::new().build();
+        testing_env!(context);
+
+        let bn = 1_000_000_000_000_000u128.to_be_bytes().to_vec();
+
+        let commit = sha256(&bn);
+
+        assert!(Game::commit_reveal(&commit, &bn));
     }
 }

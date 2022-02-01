@@ -44,7 +44,6 @@ impl Contract {
         );
 
         let amount = env::attached_deposit();
-
         assert!(amount >= ONE_NEAR, "Deposit have to be >= than 1 NEAR");
 
         let game_id = self.next_game_id;
@@ -150,6 +149,7 @@ impl Contract {
             );
 
             game.player1_reveal = Some(reveal);
+
             if Game::commit_reveal(
                 &(game.player1_commit),
                 &(game.player1_reveal.clone().unwrap()),
@@ -160,8 +160,8 @@ impl Contract {
                 log!("Player1 is not honest");
 
                 game.game_state = GameState::Ended;
-
                 game.winner = Some(game.player2.clone().unwrap());
+
                 Promise::new(game.player2.clone().unwrap()).transfer(game.deposit * 2);
             }
 

@@ -6,7 +6,7 @@ use near_sdk::{
 near_sdk::setup_alloc!();
 
 mod game;
-use game::*;
+pub use game::*;
 
 type GameId = u64;
 

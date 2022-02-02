@@ -251,7 +251,7 @@ impl Contract {
             game.winner = Some(env::predecessor_account_id());
             game.game_state = GameState::Ended;
 
-            Promise::new(env::predecessor_account_id()).transfer(2 * game.deposit);
+            Promise::new(env::predecessor_account_id()).transfer(game.deposit * 2);
 
             self.games.insert(&game_id, &game);
         } else {

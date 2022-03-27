@@ -1,19 +1,15 @@
 use near_sdk::borsh::{self, BorshDeserialize, BorshSerialize};
-use near_sdk::{
-    collections::UnorderedMap, env, log, near_bindgen, Balance, PanicOnDefault, Promise,
-};
+use near_sdk::{collections::UnorderedMap, env, log, near_bindgen, PanicOnDefault, Promise};
 
 near_sdk::setup_alloc!();
 
+mod consts;
 mod game;
+
+use consts::*;
 pub use game::*;
 
 type GameId = u64;
-
-const ONE_NEAR: Balance = 1_000_000_000_000_000_000_000_000;
-
-const ONE_SECOND: u64 = 1_000_000_000;
-const ONE_MINUTE: u64 = 60 * ONE_SECOND;
 
 #[near_bindgen]
 #[derive(BorshDeserialize, BorshSerialize, PanicOnDefault)]
@@ -240,7 +236,7 @@ impl Contract {
         if let GameState::Revealed = game.game_state {
             assert_eq!(game.player1.clone(), env::predecessor_account_id());
 
-            let reveal_time = game.reveal_time.clone().unwrap();
+            let reveal_time = game.reveal_time.unwrap();
             assert!(
                 env::block_timestamp() - reveal_time > ONE_MINUTE,
                 "Can't demand prize yet"
@@ -268,13 +264,7 @@ impl Contract {
         let ended_games: Vec<_> = self
             .games
             .iter()
-            .filter(|(_, v)| {
-                if let GameState::Ended = v.game_state {
-                    true
-                } else {
-                    false
-                }
-            })
+            .filter(|(_, v)| matches!(v.game_state, GameState::Ended))
             .map(|(k, _)| k)
             .collect();
 

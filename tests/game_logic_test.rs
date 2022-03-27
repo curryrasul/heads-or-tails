@@ -1,4 +1,4 @@
-use heads_or_tails::*;
+// use heads_or_tails::*;
 
 use near_sdk::env::sha256;
 use near_sdk::json_types::ValidAccountId;
@@ -28,8 +28,8 @@ fn first_winner_honest() {
 
     // let game_id = contract.create_game(true, player1_commit);
 
-    let player2_reveal = 1_000_000_000_500u128.to_be_bytes();
-    let player2_commit = sha256(&player2_reveal);
+    // let player2_reveal = 1_000_000_000_500u128.to_be_bytes();
+    // let player2_commit = sha256(&player2_reveal);
 
     println!("{:?}", player1_commit);
 
